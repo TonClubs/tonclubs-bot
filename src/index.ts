@@ -1,11 +1,12 @@
 import {Bot, Debug} from './Services';
 import Start from './Commands/Start';
 import Create from './Commands/Create';
+import CreateCollection from './Commands/CreateCollection';
 import BotInfo from './Utils/BotInfo';
 import {CheckGroupRequirements} from './Utils/Helpers';
 
 (async (): Promise<void> => {
-  const ok = Bot.setMyCommands([
+  const ok = await Bot.setMyCommands([
     {
       command: 'start',
       description: 'Starts the bot',
@@ -33,6 +34,8 @@ import {CheckGroupRequirements} from './Utils/Helpers';
 })();
 
 Bot.on('message', async (msg) => {
+  Debug.bot('Message received: %o', msg);
+
   if (msg.text?.startsWith('/start')) {
     Start(msg);
   }
@@ -43,8 +46,14 @@ Bot.on('message', async (msg) => {
 });
 
 Bot.on('callback_query', async (query) => {
-  if (query.data === 'create' && query.message) {
+  if (!query.message) return;
+
+  if (query.data === 'create') {
     Create(query.message);
+  }
+
+  if (query.data === 'create__collection_new') {
+    CreateCollection(query.message);
   }
 });
 

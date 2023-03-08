@@ -21,7 +21,8 @@ export const CheckGroupRequirements = async (
   const chat = await Bot.getChat(chatId);
   const member = await Bot.getChatMember(chatId, BotInfo.id);
 
-  const isMember = member.is_member || member.status === 'member';
+  const isMember =
+    member.is_member || member.status === 'member' || member.status === 'administrator';
   const isSuperGroup = chat.type === 'supergroup';
   const isAdmin = member.status === 'administrator';
   const canInviteUser = member.can_invite_users;
