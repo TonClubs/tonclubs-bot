@@ -1,2 +1,5 @@
-console.error('Congrats! You created an empty project.');
-console.error('Now you can start coding!');
+import {Bot, Debug} from './Services';
+
+Bot.on('message', async (msg) => {
+  Debug.bot('Message received: %O', msg);
+});
