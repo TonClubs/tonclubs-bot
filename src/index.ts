@@ -2,6 +2,8 @@ import {Bot, Debug} from './Services';
 import Start from './Commands/Start';
 import Create from './Commands/Create';
 import CreateCollection from './Commands/CreateCollection';
+import CreateCollectionForm from './Commands/CreateCollectionForm';
+import {store} from './Redux';
 import BotInfo from './Utils/BotInfo';
 import {CheckGroupRequirements} from './Utils/Helpers';
 
@@ -38,10 +40,25 @@ Bot.on('message', async (msg) => {
 
   if (msg.text?.startsWith('/start')) {
     Start(msg);
+    return;
   }
 
   if (msg.text?.startsWith('/create')) {
     Create(msg);
+    return;
+  }
+
+  if (msg.text?.startsWith('/join')) {
+    return;
+  }
+
+  if (msg.chat.type === 'supergroup') {
+    const {activeForm} = store.getState();
+
+    if (activeForm[msg.chat.id] === 'createCollectionForm') {
+      CreateCollectionForm(msg);
+      return;
+    }
   }
 });
 

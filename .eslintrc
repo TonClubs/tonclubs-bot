@@ -43,5 +43,13 @@
       }
     ],
     "no-console": ["error", {"allow": ["info", "warn", "error"]}]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/Redux/**/*.ts"],
+      "rules": {
+        "no-param-reassign": "off"
+      }
+    }
+  ]
 }
