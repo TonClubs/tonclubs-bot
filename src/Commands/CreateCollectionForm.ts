@@ -1,7 +1,6 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
-import {store} from '../Redux';
-import {CreateCollectionFormActions} from '../Redux/Reducers/CreateCollectionFormSlice';
+import {store, CreateCollectionFormActions} from '../Redux';
 import {Bot, Debug} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
@@ -60,6 +59,22 @@ export default async (msg: Message): Promise<void> => {
         chatId: msg.chat.id,
         fields: {
           image: largestPhoto.file_id,
+          nextField: 'price',
+        },
+      }),
+    );
+
+    await Bot.sendMessage(msg.chat.id, 'Please enter the mint and monthly renewal price in TON.');
+  }
+
+  if (nextField === 'price') {
+    if (!msg.text || !msg.text.trim()) return;
+
+    store.dispatch(
+      CreateCollectionFormActions.updateForm({
+        chatId: msg.chat.id,
+        fields: {
+          price: Number(msg.text.trim()),
           nextField: 'limit',
         },
       }),
@@ -70,8 +85,6 @@ export default async (msg: Message): Promise<void> => {
       'Please enter how many NFTs should be allowed to be minted. Enter 0 for unlimited.',
     );
   }
-
-  // TODO: mint price
 
   if (nextField === 'limit') {
     if (!msg.text || !msg.text.trim()) return;

@@ -6,6 +6,7 @@ type _CreateCollectionForm = {
   name?: string;
   description?: string;
   image?: string;
+  price?: number;
   limit?: number;
 };
 
