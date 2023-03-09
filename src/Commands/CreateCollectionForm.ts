@@ -101,7 +101,6 @@ export default async (msg: Message): Promise<void> => {
 
     const currentState = store.getState().createCollectionForm[msg.chat.id];
 
-    // TODO: check and verify values
     await Bot.sendPhoto(msg.chat.id, currentState?.image || '', {
       caption: dedent`
         Please confirm your NFT Collection details.
