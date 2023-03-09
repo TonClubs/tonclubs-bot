@@ -42,7 +42,15 @@ export default (): void => {
     }
 
     if (query.data === 'create__collection_new') {
-      CreateCollection(query.message);
+      CreateCollection(query.message, 'request');
+    }
+
+    if (query.data === 'create__collection_new__confirm') {
+      CreateCollection(query.message, 'confirm');
+    }
+
+    if (query.data === 'create__collection_new__discard') {
+      CreateCollection(query.message, 'discard');
     }
   });
 
