@@ -1,6 +1,5 @@
 import Listeners from './Listeners';
-import {Bot, Debug} from './Services';
-import BotInfo from './Utils/BotInfo';
+import {Bot, BotInfo, Debug} from './Services';
 
 (async (): Promise<void> => {
   const ok = await Bot.setMyCommands([

@@ -1,7 +1,6 @@
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
-import {Bot} from '../Services';
-import BotInfo from './BotInfo';
+import {Bot, BotInfo} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
   /**

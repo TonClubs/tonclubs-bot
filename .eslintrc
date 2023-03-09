@@ -25,6 +25,7 @@
     "@typescript-eslint/no-shadow": "error",
     "import/no-extraneous-dependencies": "error",
     "@typescript-eslint/explicit-member-accessibility": "warn",
+    "lines-between-class-members": "off",
     "no-underscore-dangle": "off",
     "prettier/prettier": [
       "error",
