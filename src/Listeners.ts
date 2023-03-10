@@ -3,6 +3,7 @@ import Create from './Commands/Create';
 import CreateCollection from './Commands/CreateCollection';
 import CreateCollectionForm from './Commands/CreateCollectionForm';
 import ConnectCollection from './Commands/ConnectCollection';
+import ConnectCollectionForm from './Commands/ConnectCollectionForm';
 import {store} from './Redux';
 import {Bot, Debug} from './Services';
 import {CheckGroupRequirements} from './Utils/Helpers';
@@ -32,6 +33,11 @@ export default (): void => {
         CreateCollectionForm(msg);
         return;
       }
+
+      if (activeForm[msg.chat.id] === 'conectCollectionForm') {
+        ConnectCollectionForm(msg);
+        return;
+      }
     }
   });
 
@@ -56,6 +62,14 @@ export default (): void => {
 
     if (query.data === 'create__collection_existing') {
       ConnectCollection(query.message, 'request');
+    }
+
+    if (query.data === 'create__collection_existing__confirm') {
+      ConnectCollection(query.message, 'confirm');
+    }
+
+    if (query.data === 'create__collection_existing__discard') {
+      ConnectCollection(query.message, 'discard');
     }
   });
 
