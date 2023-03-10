@@ -60,6 +60,8 @@ export default (): void => {
   });
 
   Bot.on('my_chat_member', (member) => {
+    if (member.new_chat_member.status === 'left') return;
+
     CheckGroupRequirements(member.chat.id, member.old_chat_member.status === 'left');
   });
 };
