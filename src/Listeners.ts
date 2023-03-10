@@ -2,6 +2,7 @@ import Start from './Commands/Start';
 import Create from './Commands/Create';
 import CreateCollection from './Commands/CreateCollection';
 import CreateCollectionForm from './Commands/CreateCollectionForm';
+import ConnectCollection from './Commands/ConnectCollection';
 import {store} from './Redux';
 import {Bot, Debug} from './Services';
 import {CheckGroupRequirements} from './Utils/Helpers';
@@ -51,6 +52,10 @@ export default (): void => {
 
     if (query.data === 'create__collection_new__discard') {
       CreateCollection(query.message, 'discard');
+    }
+
+    if (query.data === 'create__collection_existing') {
+      ConnectCollection(query.message, 'request');
     }
   });
 
