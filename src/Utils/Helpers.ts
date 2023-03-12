@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
-import {Bot, BotInfo} from '../Services';
+import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
   /**
@@ -25,6 +25,12 @@ export const CheckGroupRequirements = async (
   const isSuperGroup = chat.type === 'supergroup';
   const isAdmin = member.status === 'administrator';
   const canInviteUser = member.can_invite_users;
+
+  Debug.bot('Group Requirement Checks: isMember %o', isMember);
+  Debug.bot('Group Requirement Checks: isSuperGroup %o', isSuperGroup);
+  Debug.bot('Group Requirement Checks: isAdmin %o', isAdmin);
+  Debug.bot('Group Requirement Checks: canInviteUser %o', canInviteUser);
+  Debug.bot('Group Requirement Checks %o', isMember && isSuperGroup && isAdmin && canInviteUser);
 
   if (!isMember) return false;
 

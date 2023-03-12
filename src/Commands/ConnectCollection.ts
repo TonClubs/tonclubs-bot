@@ -1,17 +1,13 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, ActiveFormActions, ConnectCollectionFormActions} from '../Redux';
-import {Bot, Debug, Prisma} from '../Services';
+import {Bot, Prisma} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
   if (msg.chat.type !== 'supergroup') return;
 
-  const ok = await CheckGroupRequirements(msg.chat.id, false);
-
-  Debug.bot('Group Requirement Checks %o', ok);
-
-  if (!ok) return;
+  if (!(await CheckGroupRequirements(msg.chat.id, false))) return;
 
   if (type === 'request') {
     store.dispatch(

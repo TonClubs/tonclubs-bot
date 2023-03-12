@@ -1,15 +1,11 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, ConnectCollectionFormActions} from '../Redux';
-import {Bot, Debug} from '../Services';
+import {Bot} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
-  const ok = await CheckGroupRequirements(msg.chat.id, false);
-
-  Debug.bot('Group Requirement Checks %o', ok);
-
-  if (!ok) return;
+  if (!(await CheckGroupRequirements(msg.chat.id, false))) return;
 
   const {connectCollectionForm} = store.getState();
 
