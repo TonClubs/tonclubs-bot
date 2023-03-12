@@ -4,6 +4,8 @@ import {Bot} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
+  if (!msg.from?.id) return;
+
   if (msg.chat.type === 'private') {
     await Bot.sendMessage(
       msg.chat.id,
@@ -13,7 +15,7 @@ export default async (msg: Message): Promise<void> => {
     return;
   }
 
-  if (!(await CheckGroupRequirements(msg.chat.id, false))) return;
+  if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
 
   await Bot.sendMessage(
     msg.chat.id,

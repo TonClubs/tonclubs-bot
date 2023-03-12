@@ -15,6 +15,7 @@ export const GetPostgresTimestamp = (date: Date = new Date()): string => {
 
 export const CheckGroupRequirements = async (
   chatId: ChatId,
+  senderId: number,
   isInitial?: boolean,
 ): Promise<boolean> => {
   const chat = await Bot.getChat(chatId);
@@ -52,6 +53,16 @@ export const CheckGroupRequirements = async (
     );
 
     return false;
+  }
+
+  if (!Number.isNaN(senderId)) {
+    const sender = await Bot.getChatMember(chatId, senderId);
+
+    if (sender.status !== 'administrator') {
+      Bot.sendMessage(chat.id, 'Only admins can use this command.');
+
+      return false;
+    }
   }
 
   if (!isSuperGroup) {

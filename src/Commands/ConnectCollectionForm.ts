@@ -5,7 +5,9 @@ import {Bot} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
-  if (!(await CheckGroupRequirements(msg.chat.id, false))) return;
+  if (!msg.from?.id) return;
+
+  if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
 
   const {connectCollectionForm} = store.getState();
 

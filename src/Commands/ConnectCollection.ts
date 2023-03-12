@@ -5,9 +5,9 @@ import {Bot, Prisma} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
-  if (msg.chat.type !== 'supergroup') return;
+  if (msg.chat.type !== 'supergroup' || !msg.from?.id) return;
 
-  if (!(await CheckGroupRequirements(msg.chat.id, false))) return;
+  if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
 
   if (type === 'request') {
     store.dispatch(
