@@ -1,7 +1,7 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, ActiveFormActions, ConnectCollectionFormActions} from '../Redux';
-import {Bot, Debug} from '../Services';
+import {Bot, Debug, Prisma} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
@@ -33,7 +33,19 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
   }
 
   if (type === 'confirm') {
-    // TODO: Connect collection
+    const {connectCollectionForm} = store.getState();
+
+    const formData = connectCollectionForm[msg.chat.id];
+
+    if (!formData?.address || !msg.from?.id) return;
+
+    const createdIntegration = await Prisma.integrations.create({
+      data: {
+        groupId: msg.chat.id,
+        collectionAddress: formData.address,
+        groupAdmin: msg.from.id,
+      },
+    });
   }
 
   if (type === 'discard') {
