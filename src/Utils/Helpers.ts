@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
-import {Bot, BotInfo} from '../Services';
+import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
   /**
@@ -15,6 +15,7 @@ export const GetPostgresTimestamp = (date: Date = new Date()): string => {
 
 export const CheckGroupRequirements = async (
   chatId: ChatId,
+  senderId: number,
   isInitial?: boolean,
 ): Promise<boolean> => {
   const chat = await Bot.getChat(chatId);
@@ -25,6 +26,12 @@ export const CheckGroupRequirements = async (
   const isSuperGroup = chat.type === 'supergroup';
   const isAdmin = member.status === 'administrator';
   const canInviteUser = member.can_invite_users;
+
+  Debug.bot('Group Requirement Checks: isMember %o', isMember);
+  Debug.bot('Group Requirement Checks: isSuperGroup %o', isSuperGroup);
+  Debug.bot('Group Requirement Checks: isAdmin %o', isAdmin);
+  Debug.bot('Group Requirement Checks: canInviteUser %o', canInviteUser);
+  Debug.bot('Group Requirement Checks %o', isMember && isSuperGroup && isAdmin && canInviteUser);
 
   if (!isMember) return false;
 
@@ -46,6 +53,16 @@ export const CheckGroupRequirements = async (
     );
 
     return false;
+  }
+
+  if (!Number.isNaN(senderId)) {
+    const sender = await Bot.getChatMember(chatId, senderId);
+
+    if (sender.status !== 'creator') {
+      Bot.sendMessage(chat.id, 'Only the group creator can use this command.');
+
+      return false;
+    }
   }
 
   if (!isSuperGroup) {

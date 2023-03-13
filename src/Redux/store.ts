@@ -1,12 +1,14 @@
 import {configureStore, combineReducers} from '@reduxjs/toolkit';
 
-import CreateCollectionFormReducer from './Reducers/CreateCollectionFormSlice';
 import ActiveFormReducer from './Reducers/ActiveFormSlice';
+import CreateCollectionFormReducer from './Reducers/CreateCollectionFormSlice';
+import ConnectCollectionFormReducer from './Reducers/ConnectCollectionFormSlice';
 
 export const store = configureStore({
   reducer: combineReducers({
-    createCollectionForm: CreateCollectionFormReducer,
     activeForm: ActiveFormReducer,
+    createCollectionForm: CreateCollectionFormReducer,
+    connectCollectionForm: ConnectCollectionFormReducer,
   }),
 });
 

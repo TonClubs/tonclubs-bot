@@ -1,9 +1,11 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
-import {Bot, Debug} from '../Services';
+import {Bot} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
+  if (!msg.from?.id) return;
+
   if (msg.chat.type === 'private') {
     await Bot.sendMessage(
       msg.chat.id,
@@ -13,11 +15,7 @@ export default async (msg: Message): Promise<void> => {
     return;
   }
 
-  const ok = await CheckGroupRequirements(msg.chat.id, false);
-
-  Debug.bot('Group Requirement Checks %o', ok);
-
-  if (!ok) return;
+  if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
 
   await Bot.sendMessage(
     msg.chat.id,

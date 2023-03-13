@@ -4,9 +4,9 @@ import {Bot, Debug} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
-  if (msg.chat.type !== 'supergroup') return;
+  if (msg.chat.type !== 'supergroup' || !msg.from?.id) return;
 
-  const ok = await CheckGroupRequirements(msg.chat.id, false);
+  const ok = await CheckGroupRequirements(msg.chat.id, msg.from.id, false);
 
   Debug.bot('Group Requirement Checks %o', ok);
 
