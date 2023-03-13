@@ -104,6 +104,7 @@ export default async (msg: Message): Promise<void> => {
         Please confirm your NFT Collection details.
         Name: ${currentState?.name}
         Description: ${currentState?.description}
+        Price: ${currentState?.price}
         Mint Limit: ${currentState?.limit || 'Unlimited'}
       `,
       reply_markup: {

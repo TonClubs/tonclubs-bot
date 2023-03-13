@@ -35,6 +35,11 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
   }
 
   if (type === 'confirm') {
+    store.dispatch(ActiveFormActions.setActiveForm({chatId: msg.chat.id, activeForm: 'none'}));
+    store.dispatch(CreateCollectionFormActions.clearForm({chatId: msg.chat.id}));
+
+    const currentState = store.getState().createCollectionForm[msg.chat.id];
+
     // TODO: Send transaction to create collection
   }
 
