@@ -58,8 +58,8 @@ export const CheckGroupRequirements = async (
   if (!Number.isNaN(senderId)) {
     const sender = await Bot.getChatMember(chatId, senderId);
 
-    if (sender.status !== 'administrator') {
-      Bot.sendMessage(chat.id, 'Only admins can use this command.');
+    if (sender.status !== 'creator') {
+      Bot.sendMessage(chat.id, 'Only the group creator can use this command.');
 
       return false;
     }
