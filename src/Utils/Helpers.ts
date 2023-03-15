@@ -1,5 +1,7 @@
+import {Wallet} from '@tonconnect/sdk';
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
+import {Address} from 'ton-core';
 import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
@@ -55,11 +57,11 @@ export const CheckGroupRequirements = async (
     return false;
   }
 
-  if (!Number.isNaN(senderId)) {
+  if (!Number.isNaN(senderId) && senderId !== BotInfo.id) {
     const sender = await Bot.getChatMember(chatId, senderId);
 
     if (sender.status !== 'creator') {
-      Bot.sendMessage(chat.id, 'Only the group creator can use this command.');
+      Bot.sendMessage(chat.id, 'Only the group owner can use this command.');
 
       return false;
     }
@@ -87,4 +89,10 @@ export const CheckGroupRequirements = async (
   }
 
   return true;
+};
+
+export const getWalletAddress = (wallet: Wallet): Address => {
+  const [workchain, address] = wallet.account.address.split(':');
+
+  return new Address(Number(workchain), Buffer.from(address, 'hex'));
 };
