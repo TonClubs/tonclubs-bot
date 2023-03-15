@@ -1,13 +1,9 @@
 import {type Message} from 'node-telegram-bot-api';
-import {TonConnect, Wallet} from '@tonconnect/sdk';
-import {Cell} from 'ton-core';
-import QRCode from 'qrcode';
 import dedent from 'dedent';
 import NFTCollection from '../Contracts/NFTCollection';
 import {store, ActiveFormActions, CreateCollectionFormActions} from '../Redux';
-import {Bot} from '../Services';
-import {getWalletAddress} from '../Utils/Helpers';
-import TonStorage from '../Utils/TonStorage';
+import {Bot, useWallet} from '../Services';
+import {getTxHash, getWalletAddress} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
   if (msg.chat.type !== 'private' || !msg.from?.id) return;
@@ -40,15 +36,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
 
     const currentState = store.getState().createCollectionForm[msg.chat.id];
 
-    const connector = new TonConnect({
-      storage: TonStorage.getStorage(msg.from?.id || 0),
-      manifestUrl:
-        'https://ipfs.io/ipfs/bafkreieg5etvju7ovw7vlq5shinzsoembbgt6jvfb6v4lpgn3kpryize7i',
-    });
-
-    await connector.restoreConnection();
-
-    const sendTransaction = async (wallet: Wallet): Promise<void> => {
+    useWallet(msg, async (connector, wallet) => {
       const collection = NFTCollection.getDeployData({
         owner: getWalletAddress(wallet),
         limit: currentState?.limit,
@@ -74,7 +62,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
           return;
         }
 
-        const txHash = Cell.fromBoc(Buffer.from(tx.boc, 'base64'))[0].hash().toString('base64');
+        const txHash = getTxHash(tx);
 
         await Bot.sendMessage(
           msg.chat.id,
@@ -97,40 +85,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
       } catch (err) {
         // TODO: handle error
       }
-    };
-
-    if (connector.connected && connector.wallet) {
-      sendTransaction(connector.wallet);
-    } else {
-      const connectURL = connector.connect({
-        universalLink: 'https://app.tonkeeper.com/ton-connect',
-        bridgeUrl: 'https://bridge.tonapi.io/bridge',
-      });
-
-      const qrBuffer = await QRCode.toBuffer(connectURL, {width: 256});
-
-      const connectMsg = await Bot.sendPhoto(msg.chat.id, qrBuffer, {
-        caption: 'Scan the QR code or click the button below to connect your wallet',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Click To Connect',
-                url: connectURL,
-              },
-            ],
-          ],
-        },
-      });
-
-      const unsubscribe = connector.onStatusChange((walletInfo) => {
-        if (!walletInfo) return;
-
-        Bot.deleteMessage(connectMsg.chat.id, connectMsg.message_id);
-        sendTransaction(walletInfo);
-        unsubscribe();
-      });
-    }
+    });
   }
 
   if (type === 'discard') {

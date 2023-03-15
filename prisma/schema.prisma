@@ -11,8 +11,8 @@ model Integrations {
   id                Int      @id @default(autoincrement())
   createdAt         DateTime @default(now())
   collectionAddress String
-  groupId           Int
-  handle            String
+  groupId           Int      @unique
+  handle            String   @unique
 
-  @@index([collectionAddress, groupId])
+  @@index([collectionAddress, groupId, handle])
 }

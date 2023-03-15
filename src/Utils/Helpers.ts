@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
-import {type Wallet} from '@tonconnect/sdk';
-import {Address} from 'ton-core';
+import {type SendTransactionResponse, type Wallet} from '@tonconnect/sdk';
+import {Address, Cell} from 'ton-core';
 import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
@@ -96,6 +96,13 @@ export const getWalletAddress = (wallet: Wallet): Address => {
   const [workchain, address] = wallet.account.address.split(':');
 
   return new Address(Number(workchain), Buffer.from(address, 'hex'));
+};
+
+export const getTxHash = (
+  tx: SendTransactionResponse,
+  encoding: BufferEncoding = 'base64',
+): string => {
+  return Cell.fromBoc(Buffer.from(tx.boc, 'base64'))[0].hash().toString(encoding);
 };
 
 export const getRandomUrlSafeString = (length: number, prefix = ''): string => {

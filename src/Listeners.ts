@@ -4,6 +4,7 @@ import CreateCollection from './Commands/CreateCollection';
 import CreateCollectionForm from './Commands/CreateCollectionForm';
 import ConnectCollection from './Commands/ConnectCollection';
 import ConnectCollectionForm from './Commands/ConnectCollectionForm';
+import Mint from './Commands/Mint';
 import {store} from './Redux';
 import {Bot, Debug} from './Services';
 import {CheckGroupRequirements} from './Utils/Helpers';
@@ -27,6 +28,11 @@ export default (): void => {
       return;
     }
 
+    if (msg.text?.startsWith('/mint')) {
+      Mint(msg);
+      return;
+    }
+
     if (msg.text?.startsWith('/join')) {
       return;
     }
@@ -36,7 +42,6 @@ export default (): void => {
 
       if (activeForm[msg.chat.id] === 'conectCollectionForm') {
         ConnectCollectionForm(msg);
-        return;
       }
     }
 
@@ -45,7 +50,10 @@ export default (): void => {
 
       if (activeForm[msg.chat.id] === 'createCollectionForm') {
         CreateCollectionForm(msg);
-        return;
+      }
+
+      if (activeForm[msg.chat.id] === 'mintForm') {
+        Mint(msg);
       }
     }
   });

@@ -2,7 +2,7 @@ import {createSlice} from '@reduxjs/toolkit';
 import type {PayloadAction} from '@reduxjs/toolkit';
 import type {ChatId} from 'node-telegram-bot-api';
 
-type ActiveForm = undefined | 'none' | 'conectCollectionForm' | 'createCollectionForm';
+type ActiveForm = undefined | 'none' | 'conectCollectionForm' | 'createCollectionForm' | 'mintForm';
 
 export type ActiveFormState = Record<ChatId, ActiveForm>;
 

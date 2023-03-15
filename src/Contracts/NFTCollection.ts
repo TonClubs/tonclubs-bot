@@ -78,10 +78,13 @@ export default class NFTCollection {
     };
   }
 
-  public static async getMintData(owner: Address): Promise<Cell> {
+  public static getMintData(options: {owner: Address}): Cell {
     const nftUriCell = beginCell().storeBits(getBitStringFromUrl('my_nft.json')).endCell();
 
-    const nftItemContentCell = beginCell().storeAddress(owner).storeRef(nftUriCell).endCell();
+    const nftItemContentCell = beginCell()
+      .storeAddress(options.owner)
+      .storeRef(nftUriCell)
+      .endCell();
 
     return beginCell()
       .storeUint(1, 32) // op (op #1 = mint)
