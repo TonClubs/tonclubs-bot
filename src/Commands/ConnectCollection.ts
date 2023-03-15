@@ -1,8 +1,8 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, ActiveFormActions, ConnectCollectionFormActions} from '../Redux';
-import {Bot, Prisma} from '../Services';
-import {CheckGroupRequirements} from '../Utils/Helpers';
+import {Bot, BotInfo, Prisma} from '../Services';
+import {CheckGroupRequirements, getRandomUrlSafeString} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
   if (msg.chat.type === 'private' && type === 'request') {
@@ -12,6 +12,18 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
         Great! Let's setup a new group then.
         As a first step, please add me to the group you want to create. And we will continue from there.
       `,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Add me to a group',
+                url: `https://t.me/${BotInfo.username}?startgroup`,
+              },
+            ],
+          ],
+        },
+      },
     );
   }
 
@@ -50,9 +62,18 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
       data: {
         groupId: msg.chat.id,
         collectionAddress: formData.address,
-        groupAdmin: msg.from.id,
+        handle: getRandomUrlSafeString(8),
       },
     });
+
+    await Bot.sendMessage(
+      msg.chat.id,
+      dedent`
+        Your collection has been connected to this group.
+        Your group handle is: ${createdIntegration.handle}
+        Users can now join the group by having the group handle and holding your collection's NFTs.
+      `,
+    );
   }
 
   if (type === 'discard') {

@@ -12,5 +12,7 @@ model Integrations {
   createdAt         DateTime @default(now())
   collectionAddress String
   groupId           Int
-  groupAdmin        Int
+  handle            String
+
+  @@index([collectionAddress, groupId])
 }

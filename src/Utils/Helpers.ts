@@ -1,6 +1,7 @@
-import {Wallet} from '@tonconnect/sdk';
+import crypto from 'node:crypto';
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
+import {type Wallet} from '@tonconnect/sdk';
 import {Address} from 'ton-core';
 import {Bot, BotInfo, Debug} from '../Services';
 
@@ -95,4 +96,21 @@ export const getWalletAddress = (wallet: Wallet): Address => {
   const [workchain, address] = wallet.account.address.split(':');
 
   return new Address(Number(workchain), Buffer.from(address, 'hex'));
+};
+
+export const getRandomUrlSafeString = (length: number, prefix = ''): string => {
+  const randomBytes = crypto
+    .randomBytes(length * 2)
+    .toString('base64')
+    .replace(/\+/g, '')
+    .replace(/=/g, '')
+    .replace(/\//g, '');
+
+  const randomString = `${prefix}${randomBytes}`.substring(0, length);
+
+  if (randomString.length < length) {
+    return getRandomUrlSafeString(length, randomString);
+  }
+
+  return randomString;
 };
