@@ -5,6 +5,16 @@ import {Bot, Prisma} from '../Services';
 import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
+  if (msg.chat.type === 'private' && type === 'request') {
+    Bot.sendMessage(
+      msg.chat.id,
+      dedent`
+        Great! Let's setup a new group then.
+        As a first step, please add me to the group you want to create. And we will continue from there.
+      `,
+    );
+  }
+
   if (msg.chat.type !== 'supergroup' || !msg.from?.id) return;
 
   if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
@@ -18,6 +28,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
     Bot.sendMessage(
       msg.chat.id,
       dedent`
+        Great! Let's connect your collection to this group.
         Please enter the address of your NFT collection.
         Please note that using collections created by other tools may cause unexpected behavior and may be incompatible with the future versions of the bot.
       `,

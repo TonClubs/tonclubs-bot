@@ -5,18 +5,12 @@ import QRCode from 'qrcode';
 import dedent from 'dedent';
 import NFTCollection from '../Contracts/NFTCollection';
 import {store, ActiveFormActions, CreateCollectionFormActions} from '../Redux';
-import {Bot, Debug} from '../Services';
-import {CheckGroupRequirements, getWalletAddress} from '../Utils/Helpers';
+import {Bot} from '../Services';
+import {getWalletAddress} from '../Utils/Helpers';
 import TonStorage from '../Utils/TonStorage';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
-  if (msg.chat.type !== 'supergroup' || !msg.from?.id) return;
-
-  const ok = await CheckGroupRequirements(msg.chat.id, msg.from.id, false);
-
-  Debug.bot('Group Requirement Checks %o', ok);
-
-  if (!ok) return;
+  if (msg.chat.type !== 'private' || !msg.from?.id) return;
 
   if (type === 'request') {
     store.dispatch(

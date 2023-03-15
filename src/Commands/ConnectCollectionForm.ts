@@ -43,11 +43,11 @@ export default async (msg: Message): Promise<void> => {
             [
               {
                 text: 'Looks good!',
-                callback_data: 'create__collection_existing__confirm',
+                callback_data: 'connect__confirm',
               },
               {
                 text: 'Start over',
-                callback_data: 'create__collection_existing__discard',
+                callback_data: 'connect__discard',
               },
             ],
           ],

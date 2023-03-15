@@ -44,7 +44,7 @@ export const CheckGroupRequirements = async (
     if (!isAdmin) steps.push('Make me an admin');
     if (!canInviteUser) steps.push('Give me the permission to invite and add members');
 
-    steps.push('Type /create to start the setup');
+    steps.push('Type /connect to start the setup');
 
     Bot.sendMessage(
       chat.id,

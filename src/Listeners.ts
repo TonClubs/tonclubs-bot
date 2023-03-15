@@ -1,5 +1,5 @@
 import Start from './Commands/Start';
-import Create from './Commands/Create';
+import Setup from './Commands/Setup';
 import CreateCollection from './Commands/CreateCollection';
 import CreateCollectionForm from './Commands/CreateCollectionForm';
 import ConnectCollection from './Commands/ConnectCollection';
@@ -18,7 +18,12 @@ export default (): void => {
     }
 
     if (msg.text?.startsWith('/create')) {
-      Create(msg);
+      CreateCollection(msg, 'request');
+      return;
+    }
+
+    if (msg.text?.startsWith('/connect')) {
+      ConnectCollection(msg, 'request');
       return;
     }
 
@@ -29,13 +34,17 @@ export default (): void => {
     if (msg.chat.type === 'supergroup') {
       const {activeForm} = store.getState();
 
-      if (activeForm[msg.chat.id] === 'createCollectionForm') {
-        CreateCollectionForm(msg);
-        return;
-      }
-
       if (activeForm[msg.chat.id] === 'conectCollectionForm') {
         ConnectCollectionForm(msg);
+        return;
+      }
+    }
+
+    if (msg.chat.type === 'private') {
+      const {activeForm} = store.getState();
+
+      if (activeForm[msg.chat.id] === 'createCollectionForm') {
+        CreateCollectionForm(msg);
         return;
       }
     }
@@ -44,31 +53,31 @@ export default (): void => {
   Bot.on('callback_query', async (query) => {
     if (!query.message) return;
 
-    if (query.data === 'create') {
-      Create(query.message);
+    if (query.data === 'setup') {
+      Setup(query.message);
     }
 
-    if (query.data === 'create__collection_new') {
+    if (query.data === 'create') {
       CreateCollection(query.message, 'request');
     }
 
-    if (query.data === 'create__collection_new__confirm') {
+    if (query.data === 'create__confirm') {
       CreateCollection(query.message, 'confirm');
     }
 
-    if (query.data === 'create__collection_new__discard') {
+    if (query.data === 'create__discard') {
       CreateCollection(query.message, 'discard');
     }
 
-    if (query.data === 'create__collection_existing') {
+    if (query.data === 'connect') {
       ConnectCollection(query.message, 'request');
     }
 
-    if (query.data === 'create__collection_existing__confirm') {
+    if (query.data === 'connect__confirm') {
       ConnectCollection(query.message, 'confirm');
     }
 
-    if (query.data === 'create__collection_existing__discard') {
+    if (query.data === 'connect__discard') {
       ConnectCollection(query.message, 'discard');
     }
   });
