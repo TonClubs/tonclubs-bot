@@ -65,6 +65,33 @@ const JoinToIntegration = async (msg: Message, integration: Integrations): Promi
       return;
     }
 
+    const exists = await Prisma.users.findUnique({
+      where: {integrationId_userId: {integrationId: integration.id, userId: msg.from!.id}},
+    });
+
+    if (exists) {
+      Bot.sendMessage(
+        msg.chat.id,
+        dedent`
+          Congratulations! You can join the group using the link below!
+          ${exists.inviteLink}
+        `,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: 'Join Group',
+                  url: exists.inviteLink,
+                },
+              ],
+            ],
+          },
+        },
+      );
+      return;
+    }
+
     const inviteLink = await Bot.createChatInviteLink(
       integration.groupId.toString(),
       undefined,
@@ -90,9 +117,9 @@ const JoinToIntegration = async (msg: Message, integration: Integrations): Promi
     Bot.sendMessage(
       msg.chat.id,
       dedent`
-          Congratulations! You can join the group using the link below!
-          ${inviteLink.invite_link}
-        `,
+        Congratulations! You can join the group using the link below!
+        ${inviteLink.invite_link}
+      `,
       {
         reply_markup: {
           inline_keyboard: [

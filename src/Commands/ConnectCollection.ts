@@ -58,6 +58,11 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
 
     if (!formData?.address || !msg.from?.id) return;
 
+    if (await Prisma.integrations.findUnique({where: {groupId: msg.chat.id}})) {
+      Bot.sendMessage(msg.chat.id, 'This group is already connected to a collection.');
+      return;
+    }
+
     const createdIntegration = await Prisma.integrations.create({
       data: {
         groupId: msg.chat.id,
