@@ -13,6 +13,19 @@ model Integrations {
   collectionAddress String
   groupId           BigInt   @unique
   handle            String   @unique
+  Users             Users[]
 
   @@index([collectionAddress, groupId, handle])
+}
+
+model Users {
+  id            Int          @id @default(autoincrement())
+  createdAt     DateTime     @default(now())
+  integration   Integrations @relation(fields: [integrationId], references: [id])
+  integrationId Int
+  userId        BigInt
+  inviteLink    String
+  address       String
+
+  @@unique([integrationId, userId])
 }

@@ -42,7 +42,7 @@ export default class NFTCollection {
   } {
     const royaltyParams = beginCell()
       .storeUint(50, 16) // royalty factor
-      .storeUint(1000, 16) // royalty base
+      .storeUint(1001, 16) // royalty base
       .storeAddress(options.owner) // royalty receiver
       .endCell();
 

@@ -3,29 +3,100 @@ import {Integrations} from '@prisma/client';
 import {type InlineKeyboardButton, type Message} from 'node-telegram-bot-api';
 import {Address} from 'ton-core';
 import {ActiveFormActions, store} from '../Redux';
-import {Bot, Prisma} from '../Services';
-import {getTonClient} from '../Utils/Helpers';
+import {Bot, Prisma, useWallet} from '../Services';
+import {getTonClient, getWalletAddress} from '../Utils/Helpers';
 
 const JoinToIntegration = async (msg: Message, integration: Integrations): Promise<void> => {
-  const client = await getTonClient();
+  useWallet(msg, async (connector, wallet) => {
+    const loadingMessage = await Bot.sendMessage(
+      msg.chat.id,
+      `Please wait while we make sure you are eligible to join this group...`,
+    );
 
-  const collectionAddress = Address.parse(integration.collectionAddress);
+    const client = await getTonClient();
 
-  const collectionData = await client.runMethod(collectionAddress, 'get_collection_data');
+    const collectionAddress = Address.parse(integration.collectionAddress);
 
-  const nextItemIndex = collectionData.stack.readNumber();
+    const collectionData = await client.runMethod(collectionAddress, 'get_collection_data');
 
-  if (nextItemIndex > 0) {
-    Array(nextItemIndex)
-      .fill('')
-      .map(async (_, idx) => {
-        const nftAddress = await client.runMethod(collectionAddress, 'get_nft_address_by_index', [
-          {type: 'int', value: BigInt(idx)},
-        ]);
+    const nextItemIndex = collectionData.stack.readNumber();
 
-        console.log(nftAddress);
+    if (nextItemIndex > 0) {
+      const ownerAddresses = await Promise.all(
+        Array(nextItemIndex)
+          .fill('')
+          .map(async (_, idx) => {
+            const nftAddressResult = await client.runMethod(
+              collectionAddress,
+              'get_nft_address_by_index',
+              [{type: 'int', value: BigInt(idx)}],
+            );
+
+            const nftAddress = nftAddressResult.stack.readAddress();
+
+            const ownerResult = await client.runMethod(nftAddress, 'get_nft_data', []);
+
+            const ownerAddress = ownerResult.stack.skip().skip().skip().readAddress();
+
+            return ownerAddress.hash.toString('hex');
+          }),
+      );
+
+      const walletAddress = getWalletAddress(wallet);
+
+      const walletAddressHash = walletAddress.hash.toString('hex');
+
+      if (!ownerAddresses.includes(walletAddressHash)) {
+        await Bot.sendMessage(
+          msg.chat.id,
+          `You don't have an NFT for this collection. You can't join this group.`,
+        );
+        return;
+      }
+
+      const inviteLink = await Bot.createChatInviteLink(
+        integration.groupId.toString(),
+        undefined,
+        undefined,
+        1,
+        false,
+      );
+
+      await Prisma.users.create({
+        data: {
+          integration: {
+            connect: {
+              id: integration.id,
+            },
+          },
+          userId: msg.from!.id,
+          address: walletAddress.toString(),
+          inviteLink: inviteLink.invite_link,
+        },
       });
-  }
+
+      Bot.deleteMessage(msg.chat.id, loadingMessage.message_id);
+      Bot.sendMessage(
+        msg.chat.id,
+        dedent`
+          Congratulations! You can join the group using the link below!
+          ${inviteLink.invite_link}
+        `,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: 'Join Group',
+                  url: inviteLink.invite_link,
+                },
+              ],
+            ],
+          },
+        },
+      );
+    }
+  });
 };
 
 export default async (msg: Message, integrationId?: number): Promise<void> => {
