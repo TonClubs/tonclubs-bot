@@ -21,81 +21,91 @@ const JoinToIntegration = async (msg: Message, integration: Integrations): Promi
 
     const nextItemIndex = collectionData.stack.readNumber();
 
-    if (nextItemIndex > 0) {
-      const ownerAddresses = await Promise.all(
-        Array(nextItemIndex)
-          .fill('')
-          .map(async (_, idx) => {
-            const nftAddressResult = await client.runMethod(
-              collectionAddress,
-              'get_nft_address_by_index',
-              [{type: 'int', value: BigInt(idx)}],
-            );
-
-            const nftAddress = nftAddressResult.stack.readAddress();
-
-            const ownerResult = await client.runMethod(nftAddress, 'get_nft_data', []);
-
-            const ownerAddress = ownerResult.stack.skip().skip().skip().readAddress();
-
-            return ownerAddress.hash.toString('hex');
-          }),
-      );
-
-      const walletAddress = getWalletAddress(wallet);
-
-      const walletAddressHash = walletAddress.hash.toString('hex');
-
-      if (!ownerAddresses.includes(walletAddressHash)) {
-        await Bot.sendMessage(
-          msg.chat.id,
-          `You don't have an NFT for this collection. You can't join this group.`,
-        );
-        return;
-      }
-
-      const inviteLink = await Bot.createChatInviteLink(
-        integration.groupId.toString(),
-        undefined,
-        undefined,
-        1,
-        false,
-      );
-
-      await Prisma.users.create({
-        data: {
-          integration: {
-            connect: {
-              id: integration.id,
-            },
-          },
-          userId: msg.from!.id,
-          address: walletAddress.toString(),
-          inviteLink: inviteLink.invite_link,
-        },
-      });
-
+    if (nextItemIndex < 1) {
       Bot.deleteMessage(msg.chat.id, loadingMessage.message_id);
-      Bot.sendMessage(
+
+      await Bot.sendMessage(
         msg.chat.id,
-        dedent`
+        `There are no NFTs in this collection. Please mint an NFT first.`,
+      );
+      return;
+    }
+
+    const ownerAddresses = await Promise.all(
+      Array(nextItemIndex)
+        .fill('')
+        .map(async (_, idx) => {
+          const nftAddressResult = await client.runMethod(
+            collectionAddress,
+            'get_nft_address_by_index',
+            [{type: 'int', value: BigInt(idx)}],
+          );
+
+          const nftAddress = nftAddressResult.stack.readAddress();
+
+          const ownerResult = await client.runMethod(nftAddress, 'get_nft_data', []);
+
+          const ownerAddress = ownerResult.stack.skip().skip().skip().readAddress();
+
+          return ownerAddress.hash.toString('hex');
+        }),
+    );
+
+    const walletAddress = getWalletAddress(wallet);
+
+    const walletAddressHash = walletAddress.hash.toString('hex');
+
+    if (!ownerAddresses.includes(walletAddressHash)) {
+      Bot.deleteMessage(msg.chat.id, loadingMessage.message_id);
+
+      await Bot.sendMessage(
+        msg.chat.id,
+        `You don't have an NFT for this collection. You can't join this group.`,
+      );
+      return;
+    }
+
+    const inviteLink = await Bot.createChatInviteLink(
+      integration.groupId.toString(),
+      undefined,
+      undefined,
+      1,
+      false,
+    );
+
+    await Prisma.users.create({
+      data: {
+        integration: {
+          connect: {
+            id: integration.id,
+          },
+        },
+        userId: msg.from!.id,
+        address: walletAddress.toString(),
+        inviteLink: inviteLink.invite_link,
+      },
+    });
+
+    Bot.deleteMessage(msg.chat.id, loadingMessage.message_id);
+    Bot.sendMessage(
+      msg.chat.id,
+      dedent`
           Congratulations! You can join the group using the link below!
           ${inviteLink.invite_link}
         `,
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: 'Join Group',
-                  url: inviteLink.invite_link,
-                },
-              ],
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Join Group',
+                url: inviteLink.invite_link,
+              },
             ],
-          },
+          ],
         },
-      );
-    }
+      },
+    );
   });
 };
 
