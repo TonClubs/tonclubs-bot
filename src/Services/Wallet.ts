@@ -8,8 +8,10 @@ export const useWallet = async (
   msg: Message,
   onConnect: (connector: TonConnect, wallet: Wallet) => void | Promise<void>,
 ): Promise<void> => {
+  if (!msg.from?.id) return;
+
   const connector = new TonConnect({
-    storage: TonStorage.getStorage(msg.from?.id || 0),
+    storage: TonStorage.getStorage(msg.from.id),
     manifestUrl: 'https://ipfs.io/ipfs/bafkreieg5etvju7ovw7vlq5shinzsoembbgt6jvfb6v4lpgn3kpryize7i',
   });
 

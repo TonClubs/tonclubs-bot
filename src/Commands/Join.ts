@@ -1,49 +1,31 @@
 import dedent from 'dedent';
-import {type InlineKeyboardButton, type Message} from 'node-telegram-bot-api';
 import {Integrations} from '@prisma/client';
-import NFTCollection from '../Contracts/NFTCollection';
+import {type InlineKeyboardButton, type Message} from 'node-telegram-bot-api';
+import {Address} from 'ton-core';
 import {ActiveFormActions, store} from '../Redux';
-import {Bot, Prisma, useWallet} from '../Services';
-import {getTxHash, getWalletAddress} from '../Utils/Helpers';
+import {Bot, Prisma} from '../Services';
+import {getTonClient} from '../Utils/Helpers';
 
-const MintNFT = async (msg: Message, integration: Integrations): Promise<void> => {
-  useWallet(msg, async (connector, wallet) => {
-    const mintData = NFTCollection.getMintData({
-      owner: getWalletAddress(wallet),
-    });
+const JoinToIntegration = async (msg: Message, integration: Integrations): Promise<void> => {
+  const client = await getTonClient();
 
-    Bot.sendMessage(msg.chat.id, 'Please confirm the mint transaction in your wallet.');
+  const collectionAddress = Address.parse(integration.collectionAddress);
 
-    try {
-      const tx = await connector.sendTransaction({
-        validUntil: Date.now() / 1000 + 60, // 1 minute
-        messages: [
-          {
-            address: integration.collectionAddress,
-            amount: '120000000',
-            payload: mintData.toBoc().toString('base64'),
-          },
-        ],
+  const collectionData = await client.runMethod(collectionAddress, 'get_collection_data');
+
+  const nextItemIndex = collectionData.stack.readNumber();
+
+  if (nextItemIndex > 0) {
+    Array(nextItemIndex)
+      .fill('')
+      .map(async (_, idx) => {
+        const nftAddress = await client.runMethod(collectionAddress, 'get_nft_address_by_index', [
+          {type: 'int', value: BigInt(idx)},
+        ]);
+
+        console.log(nftAddress);
       });
-
-      if (!tx || !tx.boc) {
-        // TODO: handle error
-        return;
-      }
-
-      const txHash = getTxHash(tx);
-
-      await Bot.sendMessage(
-        msg.chat.id,
-        dedent`
-          Mint transaction sent. You can join the group that uses this collection after the transaction is confirmed.
-          You can track the status of the transcation at tonscan: https://testnet.tonscan.org/tx/by-msg-hash/${txHash}
-        `,
-      );
-    } catch (err) {
-      // TODO: handle error
-    }
-  });
+  }
 };
 
 export default async (msg: Message, integrationId?: number): Promise<void> => {
@@ -55,7 +37,7 @@ export default async (msg: Message, integrationId?: number): Promise<void> => {
     });
 
     if (integration) {
-      MintNFT(msg, integration);
+      JoinToIntegration(msg, integration);
     }
 
     return;
@@ -65,12 +47,12 @@ export default async (msg: Message, integrationId?: number): Promise<void> => {
 
   const activeForm = store.getState().activeForm[msg.chat.id];
 
-  if (activeForm !== 'mintForm') {
-    store.dispatch(ActiveFormActions.setActiveForm({chatId: msg.chat.id, activeForm: 'mintForm'}));
+  if (activeForm !== 'joinForm') {
+    store.dispatch(ActiveFormActions.setActiveForm({chatId: msg.chat.id, activeForm: 'joinForm'}));
 
     await Bot.sendMessage(
       msg.chat.id,
-      `Great! Please enter the collection address or group handle for the collection you want to mint.`,
+      `Great! Please enter the collection address or group handle for the collection you want to join to.`,
     );
   } else {
     if (!msg.text || !msg.text.trim()) return;
@@ -89,7 +71,7 @@ export default async (msg: Message, integrationId?: number): Promise<void> => {
     });
 
     if (integrationByHandle) {
-      MintNFT(msg, integrationByHandle);
+      JoinToIntegration(msg, integrationByHandle);
       return;
     }
 
@@ -116,7 +98,7 @@ export default async (msg: Message, integrationId?: number): Promise<void> => {
             inline_keyboard: integrationsByCollection.map<InlineKeyboardButton[]>((integration) => [
               {
                 text: integration.handle,
-                callback_data: `mint_for__${integration.handle}`,
+                callback_data: `join_to__${integration.handle}`,
               },
             ]),
           },
@@ -126,6 +108,6 @@ export default async (msg: Message, integrationId?: number): Promise<void> => {
     }
 
     // collection found
-    MintNFT(msg, integrationsByCollection[0]);
+    JoinToIntegration(msg, integrationsByCollection[0]);
   }
 };

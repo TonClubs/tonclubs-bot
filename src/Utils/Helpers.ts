@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
+import {getHttpEndpoint} from '@orbs-network/ton-access';
 import {type SendTransactionResponse, type Wallet} from '@tonconnect/sdk';
 import {Address, Cell} from 'ton-core';
+import {TonClient} from 'ton';
 import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
@@ -120,4 +122,11 @@ export const getRandomUrlSafeString = (length: number, prefix = ''): string => {
   }
 
   return randomString;
+};
+
+export const getTonClient = async (): Promise<TonClient> => {
+  const endpoint = await getHttpEndpoint({network: 'testnet'});
+  const client = new TonClient({endpoint});
+
+  return client;
 };

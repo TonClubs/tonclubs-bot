@@ -8,8 +8,16 @@ import {Bot, BotInfo, Debug} from './Services';
       description: 'Starts the bot',
     },
     {
+      command: 'connect',
+      description: 'Shows instructions to connect your group to a collection',
+    },
+    {
       command: 'create',
-      description: 'Shows instructions to setup a telegram group with the bot',
+      description: 'Shows instructions to create a new collection',
+    },
+    {
+      command: 'mint',
+      description: 'Shows instructions to mint a new NFT for a collection',
     },
     {
       command: 'join',

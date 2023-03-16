@@ -69,10 +69,11 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
     await Bot.sendMessage(
       msg.chat.id,
       dedent`
-        Your collection has been connected to this group.
-        Your group handle is: ${createdIntegration.handle}
-        Users can now join the group by having the group handle and holding your collection's NFTs.
+        Your collection has been connected to this group\.
+        Your group handle is: \`${createdIntegration.handle}\`
+        Users can now join the group by having the group handle and holding your collection's NFTs\.
       `,
+      {parse_mode: 'MarkdownV2'},
     );
   }
 

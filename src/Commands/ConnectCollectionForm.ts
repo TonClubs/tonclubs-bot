@@ -1,8 +1,9 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
+import {Address} from 'ton-core';
 import {store, ConnectCollectionFormActions} from '../Redux';
 import {Bot} from '../Services';
-import {CheckGroupRequirements} from '../Utils/Helpers';
+import {CheckGroupRequirements, getTonClient} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
   if (!msg.from?.id) return;
@@ -17,6 +18,31 @@ export default async (msg: Message): Promise<void> => {
 
   if (nextField === 'address') {
     if (!msg.text || !msg.text.trim()) return;
+
+    const client = await getTonClient();
+
+    const address = Address.parse(msg.text.trim());
+
+    if (
+      !(await client.isContractDeployed(address)) ||
+      (await client.getContractState(address)).state !== 'active'
+    ) {
+      await Bot.sendMessage(msg.chat.id, `This address is not a valid contract address.`);
+      return;
+    }
+
+    try {
+      const collectionData = await client.runMethod(address, 'get_collection_data');
+
+      const nextIndex = collectionData.stack.readNumber();
+      if (typeof nextIndex !== 'number' || nextIndex < 0) {
+        // Next index is not a number or is negative so this is not a valid collection
+        throw new Error();
+      }
+    } catch (_) {
+      await Bot.sendMessage(msg.chat.id, `This is not a valid NFT Collection address.`);
+      return;
+    }
 
     store.dispatch(
       ConnectCollectionFormActions.updateForm({
