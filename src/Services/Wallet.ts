@@ -11,7 +11,7 @@ export const useWallet = async (
   if (!msg.from?.id) return;
 
   const connector = new TonConnect({
-    storage: TonStorage.getStorage(msg.from.id),
+    storage: TonStorage.getStorage(msg.chat.id),
     manifestUrl: 'https://ipfs.io/ipfs/bafkreieg5etvju7ovw7vlq5shinzsoembbgt6jvfb6v4lpgn3kpryize7i',
   });
 
