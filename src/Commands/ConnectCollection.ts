@@ -1,10 +1,32 @@
 import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, ActiveFormActions, ConnectCollectionFormActions} from '../Redux';
-import {Bot, Prisma} from '../Services';
-import {CheckGroupRequirements} from '../Utils/Helpers';
+import {Bot, BotInfo, Prisma} from '../Services';
+import {CheckGroupRequirements, getRandomUrlSafeString} from '../Utils/Helpers';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
+  if (msg.chat.type === 'private' && type === 'request') {
+    Bot.sendMessage(
+      msg.chat.id,
+      dedent`
+        Great! Let's setup a new group then.
+        As a first step, please add me to the group you want to create. And we will continue from there.
+      `,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Add me to a group',
+                url: `https://t.me/${BotInfo.username}?startgroup`,
+              },
+            ],
+          ],
+        },
+      },
+    );
+  }
+
   if (msg.chat.type !== 'supergroup' || !msg.from?.id) return;
 
   if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
@@ -18,6 +40,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
     Bot.sendMessage(
       msg.chat.id,
       dedent`
+        Great! Let's connect your collection to this group.
         Please enter the address of your NFT collection.
         Please note that using collections created by other tools may cause unexpected behavior and may be incompatible with the future versions of the bot.
       `,
@@ -35,13 +58,28 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
 
     if (!formData?.address || !msg.from?.id) return;
 
+    if (await Prisma.integrations.findUnique({where: {groupId: msg.chat.id}})) {
+      Bot.sendMessage(msg.chat.id, 'This group is already connected to a collection.');
+      return;
+    }
+
     const createdIntegration = await Prisma.integrations.create({
       data: {
         groupId: msg.chat.id,
         collectionAddress: formData.address,
-        groupAdmin: msg.from.id,
+        handle: getRandomUrlSafeString(8),
       },
     });
+
+    await Bot.sendMessage(
+      msg.chat.id,
+      dedent`
+        Your collection has been connected to this group\.
+        Your group handle is: \`${createdIntegration.handle}\`
+        Users can now join the group by having the group handle and holding your collection's NFTs\.
+      `,
+      {parse_mode: 'MarkdownV2'},
+    );
   }
 
   if (type === 'discard') {

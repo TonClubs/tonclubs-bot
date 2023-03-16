@@ -2,12 +2,9 @@ import dedent from 'dedent';
 import {type Message} from 'node-telegram-bot-api';
 import {store, CreateCollectionFormActions} from '../Redux';
 import {Bot} from '../Services';
-import {CheckGroupRequirements} from '../Utils/Helpers';
 
 export default async (msg: Message): Promise<void> => {
-  if (!msg.from?.id) return;
-
-  if (!(await CheckGroupRequirements(msg.chat.id, msg.from.id, false))) return;
+  if (msg.chat.type !== 'private' || !msg.from?.id) return;
 
   const {createCollectionForm} = store.getState();
 
@@ -112,11 +109,11 @@ export default async (msg: Message): Promise<void> => {
           [
             {
               text: 'Looks good!',
-              callback_data: 'create__collection_new__confirm',
+              callback_data: 'create__confirm',
             },
             {
               text: 'Start over',
-              callback_data: 'create__collection_new__discard',
+              callback_data: 'create__discard',
             },
           ],
         ],

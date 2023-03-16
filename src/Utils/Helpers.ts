@@ -1,5 +1,10 @@
+import crypto from 'node:crypto';
 import dedent from 'dedent';
 import {type ChatId} from 'node-telegram-bot-api';
+import {getHttpEndpoint} from '@orbs-network/ton-access';
+import {type SendTransactionResponse, type Wallet} from '@tonconnect/sdk';
+import {Address, Cell} from 'ton-core';
+import {TonClient} from 'ton';
 import {Bot, BotInfo, Debug} from '../Services';
 
 export const GetPostgresTimestamp = (date: Date = new Date()): string => {
@@ -42,7 +47,7 @@ export const CheckGroupRequirements = async (
     if (!isAdmin) steps.push('Make me an admin');
     if (!canInviteUser) steps.push('Give me the permission to invite and add members');
 
-    steps.push('Type /create to start the setup');
+    steps.push('Type /connect to start the setup');
 
     Bot.sendMessage(
       chat.id,
@@ -55,11 +60,11 @@ export const CheckGroupRequirements = async (
     return false;
   }
 
-  if (!Number.isNaN(senderId)) {
+  if (!Number.isNaN(senderId) && senderId !== BotInfo.id) {
     const sender = await Bot.getChatMember(chatId, senderId);
 
     if (sender.status !== 'creator') {
-      Bot.sendMessage(chat.id, 'Only the group creator can use this command.');
+      Bot.sendMessage(chat.id, 'Only the group owner can use this command.');
 
       return false;
     }
@@ -87,4 +92,41 @@ export const CheckGroupRequirements = async (
   }
 
   return true;
+};
+
+export const getWalletAddress = (wallet: Wallet): Address => {
+  const [workchain, address] = wallet.account.address.split(':');
+
+  return new Address(Number(workchain), Buffer.from(address, 'hex'));
+};
+
+export const getTxHash = (
+  tx: SendTransactionResponse,
+  encoding: BufferEncoding = 'base64',
+): string => {
+  return Cell.fromBoc(Buffer.from(tx.boc, 'base64'))[0].hash().toString(encoding);
+};
+
+export const getRandomUrlSafeString = (length: number, prefix = ''): string => {
+  const randomBytes = crypto
+    .randomBytes(length * 2)
+    .toString('base64')
+    .replace(/\+/g, '')
+    .replace(/=/g, '')
+    .replace(/\//g, '');
+
+  const randomString = `${prefix}${randomBytes}`.substring(0, length);
+
+  if (randomString.length < length) {
+    return getRandomUrlSafeString(length, randomString);
+  }
+
+  return randomString;
+};
+
+export const getTonClient = async (): Promise<TonClient> => {
+  const endpoint = await getHttpEndpoint({network: 'testnet'});
+  const client = new TonClient({endpoint});
+
+  return client;
 };
