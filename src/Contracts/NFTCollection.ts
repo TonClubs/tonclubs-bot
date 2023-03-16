@@ -12,15 +12,8 @@ const getBitStringFromUrl = (url: string): BitString => {
   return new BitString(buffer, 0, buffer.length * 8);
 };
 
-const getCollectionContentCell = (): Cell => {
-  return beginCell()
-    .storeUint(0x01, 8)
-    .storeBits(
-      getBitStringFromUrl(
-        'https://raw.githubusercontent.com/ton-blockchain/token-contract/main/nft/web-example/my_collection.json',
-      ),
-    )
-    .endCell();
+const getCollectionContentCell = (url: string): Cell => {
+  return beginCell().storeUint(0x01, 8).storeBits(getBitStringFromUrl(url)).endCell();
 };
 
 const getCommonContentCell = (): Cell => {
@@ -34,7 +27,12 @@ const getCommonContentCell = (): Cell => {
 };
 
 export default class NFTCollection {
-  public static getDeployData(options: {owner: Address; price?: number; limit?: number}): {
+  public static getDeployData(options: {
+    owner: Address;
+    collectionContentUrl: string;
+    price?: number;
+    limit?: number;
+  }): {
     address: Address;
     code: Cell;
     data: Cell;
@@ -42,12 +40,12 @@ export default class NFTCollection {
   } {
     const royaltyParams = beginCell()
       .storeUint(50, 16) // royalty factor
-      .storeUint(1001, 16) // royalty base
+      .storeUint(1000, 16) // royalty base
       .storeAddress(options.owner) // royalty receiver
       .endCell();
 
     const contentCell = beginCell()
-      .storeRef(getCollectionContentCell())
+      .storeRef(getCollectionContentCell(options.collectionContentUrl))
       .storeRef(getCommonContentCell())
       .endCell();
 
@@ -55,7 +53,7 @@ export default class NFTCollection {
       .storeAddress(options.owner) // owner address
       .storeUint(0, 64) // next item index
       .storeUint(options.limit || 0xffffffffffffffffn, 64) // limit
-      .storeUint(options.price || 0, 64) // price -- 50000000 = 0.05 TON
+      .storeUint((options.price || 0) * 1000, 64) // price -- 50000000 = 0.05 TON
       .storeRef(contentCell) // content cell
       .storeRef(NFTItemCodeCell) // code cell
       .storeRef(royaltyParams) // royalty params cell

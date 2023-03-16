@@ -1,9 +1,11 @@
 import {type Message} from 'node-telegram-bot-api';
 import dedent from 'dedent';
+import {v4 as uuid} from 'uuid';
 import NFTCollection from '../Contracts/NFTCollection';
 import {store, ActiveFormActions, CreateCollectionFormActions} from '../Redux';
-import {Bot, useWallet} from '../Services';
+import {Bot, S3, useWallet} from '../Services';
 import {getTxHash, getWalletAddress} from '../Utils/Helpers';
+import {AWS_S3_URL} from '../Utils/Constants';
 
 export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Promise<void> => {
   if (msg.chat.type !== 'private' || !msg.from?.id) return;
@@ -31,16 +33,44 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
   }
 
   if (type === 'confirm') {
+    const currentState = store.getState().createCollectionForm[msg.chat.id];
+
     store.dispatch(ActiveFormActions.setActiveForm({chatId: msg.chat.id, activeForm: 'none'}));
     store.dispatch(CreateCollectionFormActions.clearForm({chatId: msg.chat.id}));
 
-    const currentState = store.getState().createCollectionForm[msg.chat.id];
+    if (!currentState || !currentState.name || !currentState.description || !currentState.image) {
+      return;
+    }
 
     useWallet(msg, async (connector, wallet) => {
+      const owner = getWalletAddress(wallet);
+
+      const collectionContent = {
+        name: currentState.name!,
+        description: currentState.description!,
+        image: await Bot.getFileLink(currentState.image!),
+        external_link: 'https://tonclubs.com',
+        seller_fee_basis_points: 50,
+        fee_recipient: owner.toString(),
+      };
+
+      const objectKey = `${uuid()}.json`;
+
+      const uploadResponse = await S3.Upload(
+        objectKey,
+        Buffer.from(JSON.stringify(collectionContent)),
+        'application/json',
+      );
+
+      if (!uploadResponse.ok) {
+        return;
+      }
+
       const collection = NFTCollection.getDeployData({
-        owner: getWalletAddress(wallet),
-        limit: currentState?.limit,
-        price: currentState?.price,
+        owner,
+        limit: currentState.limit,
+        price: currentState.price,
+        collectionContentUrl: `${AWS_S3_URL}/${objectKey}`,
       });
 
       Bot.sendMessage(msg.chat.id, 'Please confirm the deploy transaction in your wallet.');
