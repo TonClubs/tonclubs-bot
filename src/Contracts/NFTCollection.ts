@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import {join} from 'node:path';
-import {Address, Cell, contractAddress, beginCell, BitString} from 'ton-core';
+import {Address, Cell, contractAddress, beginCell, BitString, storeStateInit} from 'ton-core';
 
 const BOCsDir = join(__dirname, './BOCs');
 
@@ -65,9 +65,7 @@ export default class NFTCollection {
     const address = contractAddress(workchain, {code: NFTCollectionCodeCell, data});
 
     const stateInit = beginCell()
-      .storeUint(6, 5)
-      .storeRef(NFTCollectionCodeCell)
-      .storeRef(data)
+      .store(storeStateInit({code: NFTCollectionCodeCell, data}))
       .endCell();
 
     return {
