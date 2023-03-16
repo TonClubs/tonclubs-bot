@@ -67,6 +67,8 @@ export default (): void => {
   Bot.on('callback_query', async (query) => {
     if (!query.message) return;
 
+    Debug.bot('Query received: %o', query);
+
     if (query.data?.startsWith('join_to__')) {
       const integrationId = Number(query.data.replace('join_to__', ''));
       Join(query.message, integrationId);
@@ -107,6 +109,8 @@ export default (): void => {
   });
 
   Bot.on('my_chat_member', (member) => {
+    Debug.bot('My chat member received: %o', member);
+
     if (member.new_chat_member.status === 'left') return;
 
     CheckGroupRequirements(member.chat.id, NaN, member.old_chat_member.status === 'left');
