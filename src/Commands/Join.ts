@@ -66,7 +66,12 @@ const JoinToIntegration = async (msg: Message, integration: Integrations): Promi
     }
 
     const exists = await Prisma.users.findUnique({
-      where: {integrationId_userId: {integrationId: integration.id, userId: msg.from!.id}},
+      where: {
+        integrationId_userId: {
+          integrationId: integration.id,
+          userId: msg.from!.id,
+        },
+      },
     });
 
     if (exists) {
@@ -92,10 +97,12 @@ const JoinToIntegration = async (msg: Message, integration: Integrations): Promi
       return;
     }
 
+    await Bot.unbanChatMember(Number(integration.groupId), msg.from!.id);
+
     const inviteLink = await Bot.createChatInviteLink(
       integration.groupId.toString(),
       undefined,
-      undefined,
+      Date.now() / 1000 + 60 * 60 * 24 * 7,
       1,
       false,
     );
