@@ -6,6 +6,7 @@ import ConnectCollection from './Commands/ConnectCollection';
 import ConnectCollectionForm from './Commands/ConnectCollectionForm';
 import Mint from './Commands/Mint';
 import Join from './Commands/Join';
+import Disconnect from './Commands/Disconnect';
 import {store} from './Redux';
 import {Bot, Debug} from './Services';
 import {CheckGroupRequirements} from './Utils/Helpers';
@@ -36,6 +37,11 @@ export default (): void => {
 
     if (msg.text?.startsWith('/join')) {
       Join(msg);
+      return;
+    }
+
+    if (msg.text?.startsWith('/disconnect')) {
+      Disconnect(msg, 'request');
       return;
     }
 
@@ -105,6 +111,14 @@ export default (): void => {
 
     if (query.data === 'connect__discard') {
       ConnectCollection(query.message, 'discard');
+    }
+
+    if (query.data === 'disconnect__confirm') {
+      Disconnect(query.message, 'confirm');
+    }
+
+    if (query.data === 'disconnect__discard') {
+      Disconnect(query.message, 'discard');
     }
   });
 
