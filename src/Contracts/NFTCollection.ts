@@ -48,7 +48,7 @@ export default class NFTCollection {
       .storeAddress(options.owner) // owner address
       .storeUint(0, 64) // next item index
       .storeUint(options.limit || 0xffffffffffffffffn, 64) // limit
-      .storeUint((options.price || 0) * 1000, 64) // price -- 50000000 = 0.05 TON
+      .storeUint(BigInt(options.price || 0) * 1000000000n, 64) // price
       .storeRef(contentCell) // content cell
       .storeRef(NFTItemCodeCell) // code cell
       .storeRef(royaltyParams) // royalty params cell

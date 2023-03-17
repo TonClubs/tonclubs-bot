@@ -1,18 +1,27 @@
 import dedent from 'dedent';
 import {type InlineKeyboardButton, type Message} from 'node-telegram-bot-api';
 import {Integrations} from '@prisma/client';
+import {Address} from 'ton-core';
 import NFTCollection from '../Contracts/NFTCollection';
 import {ActiveFormActions, store} from '../Redux';
 import {Bot, Prisma, useWallet} from '../Services';
-import {getTxHash, getWalletAddress} from '../Utils/Helpers';
+import {getTonClient, getTxHash, getWalletAddress} from '../Utils/Helpers';
 
 const MintNFT = async (msg: Message, integration: Integrations): Promise<void> => {
   useWallet(msg, async (connector, wallet) => {
+    const client = await getTonClient();
+
     const mintData = NFTCollection.getMintData({
       owner: getWalletAddress(wallet),
     });
 
     Bot.sendMessage(msg.chat.id, 'Please confirm the mint transaction in your wallet.');
+
+    const mintPriceRes = await client.runMethod(
+      Address.parse(integration.collectionAddress),
+      'get_mint_price',
+    );
+    const mintPrice = mintPriceRes.stack.readBigNumber();
 
     try {
       const tx = await connector.sendTransaction({
@@ -20,7 +29,7 @@ const MintNFT = async (msg: Message, integration: Integrations): Promise<void> =
         messages: [
           {
             address: integration.collectionAddress,
-            amount: '120000000',
+            amount: mintPrice.toString(),
             payload: mintData.toBoc().toString('base64'),
           },
         ],
