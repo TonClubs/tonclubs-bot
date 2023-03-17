@@ -16,20 +16,15 @@ const getCollectionContentCell = (url: string): Cell => {
   return beginCell().storeUint(0x01, 8).storeBits(getBitStringFromUrl(url)).endCell();
 };
 
-const getCommonContentCell = (): Cell => {
-  return beginCell()
-    .storeBits(
-      getBitStringFromUrl(
-        'https://raw.githubusercontent.com/ton-blockchain/token-contract/main/nft/web-example/',
-      ),
-    )
-    .endCell();
+const getCommonContentCell = (url: string): Cell => {
+  return beginCell().storeBits(getBitStringFromUrl(url)).endCell();
 };
 
 export default class NFTCollection {
   public static getDeployData(options: {
     owner: Address;
     collectionContentUrl: string;
+    commonContentUrl: string;
     price?: number;
     limit?: number;
   }): {
@@ -46,7 +41,7 @@ export default class NFTCollection {
 
     const contentCell = beginCell()
       .storeRef(getCollectionContentCell(options.collectionContentUrl))
-      .storeRef(getCommonContentCell())
+      .storeRef(getCommonContentCell(options.commonContentUrl))
       .endCell();
 
     const data = beginCell()
@@ -75,7 +70,7 @@ export default class NFTCollection {
   }
 
   public static getMintData(options: {owner: Address}): Cell {
-    const nftUriCell = beginCell().storeBits(getBitStringFromUrl('my_nft.json')).endCell();
+    const nftUriCell = beginCell().storeBits(getBitStringFromUrl('')).endCell();
 
     const nftItemContentCell = beginCell()
       .storeAddress(options.owner)

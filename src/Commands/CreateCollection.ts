@@ -45,24 +45,48 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
     useWallet(msg, async (connector, wallet) => {
       const owner = getWalletAddress(wallet);
 
+      const imageLink = await Bot.getFileLink(currentState.image!);
+      const name = currentState.name!;
+      const description = currentState.description!;
+
       const collectionContent = {
-        name: currentState.name!,
-        description: currentState.description!,
-        image: await Bot.getFileLink(currentState.image!),
+        name,
+        description,
+        image: imageLink,
         external_link: 'https://tonclubs.com',
         seller_fee_basis_points: 50,
         fee_recipient: owner.toString(),
       };
 
-      const objectKey = `${uuid()}.json`;
+      const collectionContentKey = `${uuid()}.json`;
 
-      const uploadResponse = await S3.Upload(
-        objectKey,
+      const collectionContentUploadResponse = await S3.Upload(
+        collectionContentKey,
         Buffer.from(JSON.stringify(collectionContent)),
         'application/json',
       );
 
-      if (!uploadResponse.ok) {
+      if (!collectionContentUploadResponse.ok) {
+        return;
+      }
+
+      const commonContent = {
+        name,
+        description,
+        image: imageLink,
+        external_url: 'https://tonclubs.com',
+        attributes: [],
+      };
+
+      const commonContentKey = `${uuid()}.json`;
+
+      const commonContentUploadResponse = await S3.Upload(
+        commonContentKey,
+        Buffer.from(JSON.stringify(commonContent)),
+        'application/json',
+      );
+
+      if (!commonContentUploadResponse.ok) {
         return;
       }
 
@@ -70,7 +94,8 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
         owner,
         limit: currentState.limit,
         price: currentState.price,
-        collectionContentUrl: `${AWS_S3_URL}/${objectKey}`,
+        collectionContentUrl: `${AWS_S3_URL}/${collectionContentKey}`,
+        commonContentUrl: `${AWS_S3_URL}/${commonContentKey}`,
       });
 
       Bot.sendMessage(msg.chat.id, 'Please confirm the deploy transaction in your wallet.');
