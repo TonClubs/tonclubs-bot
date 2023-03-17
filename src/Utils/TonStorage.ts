@@ -1,29 +1,29 @@
 /* eslint max-classes-per-file: "off" */
+/* eslint class-methods-use-this: "off" */
 
 import {IStorage} from '@tonconnect/sdk';
 
 class TonStorage implements IStorage {
-  public storage = new Map<string, string>();
-
   public getItem(key: string): Promise<string | null> {
-    return new Promise((resolve) => {
-      resolve(this.storage.get(key) || null);
-    });
+    // this method is not used
+
+    return Promise.resolve(null);
   }
 
   public setItem(key: string, value: string): Promise<void> {
-    this.storage.set(key, value);
+    // this method is not used
 
     return Promise.resolve();
   }
 
   public removeItem(key: string): Promise<void> {
-    this.storage.delete(key);
+    // this method is not used
 
     return Promise.resolve();
   }
 }
 
+// This is not used anymore but I'm keeping it here for future reference
 export default new (class TonStorageHOC {
   public storages: Record<number, TonStorage> = {};
 
