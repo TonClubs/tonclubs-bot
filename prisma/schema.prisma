@@ -21,7 +21,7 @@ model Integrations {
 model Users {
   id            Int          @id @default(autoincrement())
   createdAt     DateTime     @default(now())
-  integration   Integrations @relation(fields: [integrationId], references: [id])
+  integration   Integrations @relation(fields: [integrationId], references: [id], onDelete: Cascade)
   integrationId Int
   userId        BigInt
   inviteLink    String
