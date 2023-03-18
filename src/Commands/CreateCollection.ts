@@ -45,9 +45,15 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
     useWallet(msg, async (connector, wallet) => {
       const owner = getWalletAddress(wallet);
 
-      const imageLink = await Bot.getFileLink(currentState.image!);
+      const imageStream = Bot.getFileStream(currentState.image!);
       const name = currentState.name!;
       const description = currentState.description!;
+
+      const imageKey = `${uuid()}.jpg`;
+      const imageUploadResponse = await S3.Upload(imageKey, imageStream, 'image/jpeg');
+      if (!imageUploadResponse.ok) return;
+
+      const imageLink = `${AWS_S3_URL}/${imageKey}`;
 
       const collectionContent = {
         name,
