@@ -15,13 +15,27 @@ const MintNFT = async (msg: Message, integration: Integrations): Promise<void> =
       owner: getWalletAddress(wallet),
     });
 
-    Bot.sendMessage(msg.chat.id, 'Please confirm the mint transaction in your wallet.');
+    let mintPrice: bigint;
+    try {
+      const mintPriceRes = await client.runMethod(
+        Address.parse(integration.collectionAddress),
+        'get_mint_price',
+      );
 
-    const mintPriceRes = await client.runMethod(
-      Address.parse(integration.collectionAddress),
-      'get_mint_price',
-    );
-    const mintPrice = mintPriceRes.stack.readBigNumber();
+      mintPrice = mintPriceRes.stack.readBigNumber();
+
+      Bot.sendMessage(msg.chat.id, 'Please confirm the mint transaction in your wallet.');
+    } catch (err) {
+      mintPrice = 0n;
+
+      Bot.sendMessage(
+        msg.chat.id,
+        dedent`
+          This collection is not created using the TonClubs Bot. Mint transaction may fail.
+          Please confirm the mint transaction in your wallet if you're sure.
+        `,
+      );
+    }
 
     try {
       const tx = await connector.sendTransaction({
