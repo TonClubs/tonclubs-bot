@@ -1,7 +1,6 @@
 import {type Message} from 'node-telegram-bot-api';
 import dedent from 'dedent';
 import {v4 as uuid} from 'uuid';
-import {fileTypeFromStream} from 'file-type';
 import NFTCollection from '../Contracts/NFTCollection';
 import {store, ActiveFormActions, CreateCollectionFormActions} from '../Redux';
 import {Bot, S3, useWallet} from '../Services';
@@ -50,6 +49,7 @@ export default async (msg: Message, type: 'request' | 'confirm' | 'discard'): Pr
       const name = currentState.name!;
       const description = currentState.description!;
 
+      const {fileTypeFromStream} = await import('file-type');
       const imageType = await fileTypeFromStream(imageStream);
 
       const imageKey = `${uuid()}.${imageType?.ext || 'jpg'}`;
