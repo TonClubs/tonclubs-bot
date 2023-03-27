@@ -17,7 +17,7 @@ Source code of the [TonClubs Bot](https://t.me/tonclubstestbot)
 
 ## Steps to change the Collection and Item Contracts
 
-- Clone the [tonclub-contracts](https://github.com/TonClubs/tonclubs-contracts/tree/post-hackathon) repository
-- Follow the instructions in the tonclub-contracts README to prepare the contracts
-- Run `yarn compile` in the tonclub-contracts repository
-- Copy the compiled contracts from the tonclub-contracts repository to the `src/Contracts/BOCs` folder in this repository
+- Clone the [tonclubs-contracts](https://github.com/TonClubs/tonclubs-contracts/tree/post-hackathon) repository
+- Follow the instructions in the tonclubs-contracts README to prepare the contracts
+- Run `yarn compile` in the tonclubs-contracts repository
+- Copy the compiled contracts from the tonclubs-contracts repository to the `src/Contracts/BOCs` folder in this repository
