@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import {type Message} from 'node-telegram-bot-api';
 import {TonConnect, type Wallet} from '@tonconnect/sdk';
 import QRCode from 'qrcode';
@@ -20,13 +21,18 @@ export const useWallet = async (
 
     await connector.restoreConnection();
 
+    const proof = crypto.randomBytes(32).toString('hex');
+
     if (connector.connected && connector.wallet) {
       onConnect(connector, connector.wallet);
     } else {
-      const connectURL = connector.connect({
-        universalLink: 'https://app.tonkeeper.com/ton-connect',
-        bridgeUrl: 'https://bridge.tonapi.io/bridge',
-      });
+      const connectURL = connector.connect(
+        {
+          universalLink: 'https://app.tonkeeper.com/ton-connect',
+          bridgeUrl: 'https://bridge.tonapi.io/bridge',
+        },
+        {tonProof: proof},
+      );
 
       const qrBuffer = await QRCode.toBuffer(connectURL, {width: 256});
 
@@ -46,6 +52,14 @@ export const useWallet = async (
 
       const unsubscribe = connector.onStatusChange((walletInfo) => {
         if (!walletInfo) return;
+
+        const tonProof = walletInfo.connectItems?.tonProof;
+
+        if (!tonProof || !('proof' in tonProof) || tonProof.proof.payload !== proof) {
+          Bot.sendMessage(msg.chat.id, 'Invalid proof received, please try again');
+
+          return;
+        }
 
         Bot.deleteMessage(connectMsg.chat.id, connectMsg.message_id);
         onConnect(connector, walletInfo);

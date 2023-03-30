@@ -1,5 +1,6 @@
 import type {ReadStream} from 'node:fs';
 import {buffer as streamToBuffer} from 'node:stream/consumers';
+import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 import {
   S3Client,
@@ -27,7 +28,7 @@ export const client = new S3Client({
 
 export const Upload = async (
   key: string,
-  body: ReadStream | Buffer,
+  body: ReadStream | Buffer | Readable,
   mime: string,
 ): Promise<
   | {
